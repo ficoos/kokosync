@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ficoos/moonkosync/urlutil"
+	"github.com/ficoos/kokosync/urlutil"
 )
 
 type Progress struct {

@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/ficoos/moonkosync/kosync"
+	"github.com/ficoos/kokosync/kosync"
 	_ "github.com/mattn/go-sqlite3"
 )
 

@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ficoos/moonkosync/kosync"
+	"github.com/ficoos/kokosync/kosync"
 )
 
 type BridgeImpl struct {

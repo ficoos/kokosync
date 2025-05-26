@@ -1,4 +1,4 @@
-module github.com/ficoos/moonkosync
+module github.com/ficoos/kokosync
 
 go 1.24.3
 
