@@ -11,8 +11,7 @@ const EnvPrefix = "MKSYNC_"
 
 type Config struct {
 	DBPath        string
-	KomgaAPIRoot  *url.URL
-	KomgaAPIKey   string
+	UpstreamURL   *url.URL
 	ListenAddress string
 }
 
@@ -21,22 +20,20 @@ func ConfigFromEnvironment() (*Config, error) {
 	if len(dbPath) == 0 {
 		dbPath = "./data.db"
 	}
-	rawKomgaAPIRoot := strings.TrimSpace(os.Getenv(EnvPrefix + "KOMGA_API_ROOT"))
-	komgaAPIKey := strings.TrimSpace(os.Getenv(EnvPrefix + "KOMGA_API_KEY"))
-	listenAddress := strings.TrimSpace(os.Getenv(EnvPrefix + "KOMGA_LISTEN_ADDRESS"))
+	rawUpstreamAPIRoot := strings.TrimSpace(os.Getenv(EnvPrefix + "UPSTREAM_API_ROOT"))
+	listenAddress := strings.TrimSpace(os.Getenv(EnvPrefix + "LISTEN_ADDRESS"))
 	if listenAddress == "" {
-		listenAddress = "0.0.0.0:8889"
+		listenAddress = "127.0.0.1:8889"
 	}
 
-	komgaAPIRoot, err := url.Parse(rawKomgaAPIRoot)
+	upstreamURL, err := url.Parse(rawUpstreamAPIRoot)
 	if err != nil {
 		return nil, fmt.Errorf("parse komga api root: %s", err)
 	}
 
 	return &Config{
 		DBPath:        dbPath,
-		KomgaAPIRoot:  komgaAPIRoot,
-		KomgaAPIKey:   komgaAPIKey,
+		UpstreamURL:   upstreamURL,
 		ListenAddress: listenAddress,
 	}, nil
 }

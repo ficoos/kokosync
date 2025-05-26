@@ -10,13 +10,35 @@ import (
 
 var ErrDocNotFound = errors.New("document not found")
 var ErrBadRequest = errors.New("bad request")
+var ErrUnauthorized = errors.New("forbidden")
 
 type Auth struct {
 	User string
 	Key  string
 }
 
+func translateError(err error) int {
+	if err == nil {
+		return http.StatusOK
+	}
+	if errors.Is(err, ErrDocNotFound) {
+		return http.StatusNotFound
+	}
+	if errors.Is(err, ErrBadRequest) {
+		return http.StatusBadRequest
+	}
+	if errors.Is(err, ErrUnauthorized) {
+		return http.StatusForbidden
+	}
+
+	return http.StatusInternalServerError
+}
+
 func (a *Auth) String() string {
+	return fmt.Sprintf("[user=%s key=REDACTED]", a.User)
+}
+
+func (a *Auth) Repr() string {
 	return fmt.Sprintf("[user=%s key=%s]", a.User, a.Key)
 }
 
@@ -39,28 +61,27 @@ func NewServer(server Server) http.Handler {
 	mux.HandleFunc("GET /users/auth", func(w http.ResponseWriter, r *http.Request) {
 		auth := extractAuth(r)
 		err := server.Authorize(auth)
-		if err == nil {
-			w.WriteHeader(http.StatusOK)
-		} else if errors.Is(err, ErrBadRequest) {
-			w.WriteHeader(http.StatusBadRequest)
-		} else if errors.Is(err, ErrDocNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
+		status := translateError(err)
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(status)
+		if status == http.StatusInternalServerError {
 			log.Printf("ERROR: %s: %s", r.RequestURI, err)
-			w.WriteHeader(http.StatusInternalServerError)
+		}
+		if err == nil {
+			w.Write([]byte(`{ "authorized": "OK" }`))
 		}
 	})
 	mux.HandleFunc("GET /syncs/progress/{documenthash}", func(w http.ResponseWriter, r *http.Request) {
 		hash := r.PathValue("documenthash")
 		progress, err := server.GetProgress(extractAuth(r), hash)
-		if err != nil {
-			if errors.Is(err, ErrDocNotFound) {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
-
+		status := translateError(err)
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(status)
+		if status == http.StatusInternalServerError {
 			log.Printf("ERROR: %s: %s", r.RequestURI, err)
-			w.WriteHeader(http.StatusInternalServerError)
+		}
+		if err != nil {
+			return
 		}
 
 		enc := json.NewEncoder(w)
@@ -79,19 +100,14 @@ func NewServer(server Server) http.Handler {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		res, err := server.UpdateProgress(extractAuth(r), &p)
-		if err != nil {
-			if errors.Is(err, ErrDocNotFound) {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
-
-			if errors.Is(err, ErrBadRequest) {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
+		status := translateError(err)
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(status)
+		if status == http.StatusInternalServerError {
 			log.Printf("ERROR: %s: %s", r.RequestURI, err)
-			w.WriteHeader(http.StatusInternalServerError)
+		}
+		if err != nil {
+			return
 		}
 
 		enc := json.NewEncoder(w)

@@ -77,15 +77,23 @@ func (c *Client) request(method string, url *url.URL, payload any, result any) e
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+			return ErrUnauthorized
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return ErrDocNotFound
+		}
 		return fmt.Errorf("server retuned an error: %s [%d]", resp.Status, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
 
-	dec := json.NewDecoder(resp.Body)
-	err = dec.Decode(result)
-	if err != nil {
-		return fmt.Errorf("unmarshak result: %s", err)
+	if result != nil {
+		dec := json.NewDecoder(resp.Body)
+		err = dec.Decode(result)
+		if err != nil {
+			return fmt.Errorf("unmarshak result: %s", err)
+		}
 	}
 
 	return nil
@@ -107,4 +115,8 @@ func (c *Client) UpdateProgress(progress *Progress) (*UpdateProgressResult, erro
 	var result UpdateProgressResult
 	err := c.request(http.MethodPost, urlutil.Join(c.apiRoot, "/syncs/progress"), progress, &result)
 	return &result, err
+}
+
+func (c *Client) Authorize() error {
+	return c.request(http.MethodGet, urlutil.Join(c.apiRoot, "/users/auth"), nil, nil)
 }
