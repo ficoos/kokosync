@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/ficoos/kokosync/kosync"
@@ -100,7 +101,7 @@ func main() {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	mux.Handle("/", kosync.NewServer(srv))
+	mux.Handle(conf.ProxyPrefix, http.StripPrefix(strings.TrimSuffix(conf.ProxyPrefix, "/"), kosync.NewServer(srv)))
 
 	http.Serve(l, mux)
 }

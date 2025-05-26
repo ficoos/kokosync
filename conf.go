@@ -13,6 +13,7 @@ type Config struct {
 	DBPath        string
 	UpstreamURL   *url.URL
 	ListenAddress string
+	ProxyPrefix   string
 }
 
 func ConfigFromEnvironment() (*Config, error) {
@@ -26,6 +27,11 @@ func ConfigFromEnvironment() (*Config, error) {
 		listenAddress = "127.0.0.1:8889"
 	}
 
+	proxyPrefix := strings.TrimSpace(os.Getenv(EnvPrefix + "PROXY_PREFIX"))
+	if !strings.HasSuffix(proxyPrefix, "/") {
+		proxyPrefix += "/"
+	}
+
 	upstreamURL, err := url.Parse(rawUpstreamAPIRoot)
 	if err != nil {
 		return nil, fmt.Errorf("parse komga api root: %s", err)
@@ -35,5 +41,6 @@ func ConfigFromEnvironment() (*Config, error) {
 		DBPath:        dbPath,
 		UpstreamURL:   upstreamURL,
 		ListenAddress: listenAddress,
+		ProxyPrefix:   proxyPrefix,
 	}, nil
 }
