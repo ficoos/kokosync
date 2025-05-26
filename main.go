@@ -96,5 +96,11 @@ func main() {
 		log.Fatalf("bind address: %s", err)
 	}
 
-	http.Serve(l, kosync.NewServer(srv))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.Handle("/", kosync.NewServer(srv))
+
+	http.Serve(l, mux)
 }
