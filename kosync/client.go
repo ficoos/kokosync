@@ -66,8 +66,9 @@ func (c *Client) request(method string, url *url.URL, payload any, result any) e
 		Method: method,
 		URL:    url,
 		Header: http.Header{
-			"X-Auth-User": []string{c.userName},
-			"X-Auth-Key":  []string{c.userKey},
+			"Content-Type": []string{"application/json"},
+			"X-Auth-User":  []string{c.userName},
+			"X-Auth-Key":   []string{c.userKey},
 		},
 		Body: body,
 	}
