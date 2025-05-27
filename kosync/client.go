@@ -113,7 +113,7 @@ func (c *Client) Progress(document string) (*Progress, error) {
 
 func (c *Client) UpdateProgress(progress *Progress) (*UpdateProgressResult, error) {
 	var result UpdateProgressResult
-	err := c.request(http.MethodPost, urlutil.Join(c.apiRoot, "/syncs/progress"), progress, &result)
+	err := c.request(http.MethodPut, urlutil.Join(c.apiRoot, "/syncs/progress"), progress, &result)
 	return &result, err
 }
 
